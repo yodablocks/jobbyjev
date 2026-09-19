@@ -12,7 +12,9 @@ Writes <out>/results.json and <out>/report.html.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
+import mimetypes
 import subprocess
 import sys
 import time
@@ -38,6 +40,25 @@ def read_resume(path: Path) -> str:
         except FileNotFoundError:
             sys.exit("pdftotext not found (brew install poppler), or pass a .md/.txt resume")
     return path.read_text()
+
+
+def photo_data_uri(path: Path | None) -> str | None:
+    """Embed a headshot as a data URI so report.html stays a single file.
+    Downscaled with sips when available (macOS); otherwise embedded as is."""
+    if path is None:
+        return None
+    if not path.is_file():
+        sys.exit(f"photo not found: {path}")
+    src = path
+    small = CACHE.parent / f"photo_{path.stem}_320.jpg"
+    try:
+        subprocess.run(["sips", "-Z", "320", "-s", "format", "jpeg", str(path), "--out", str(small)],
+                       check=True, capture_output=True)
+        src = small
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        pass
+    mime = mimetypes.guess_type(str(src))[0] or "image/jpeg"
+    return f"data:{mime};base64," + base64.b64encode(src.read_bytes()).decode()
 
 
 def score_company(client: JevClient, resume: str, company: dict, use_cache: bool) -> dict:
@@ -69,6 +90,7 @@ def main() -> None:
     ap.add_argument("--model", default="jev-latest")
     ap.add_argument("--no-cache", action="store_true", help="re-query even if cached")
     ap.add_argument("--top", type=int, default=10, help="rows to print")
+    ap.add_argument("--photo", type=Path, default=None, help="headshot to show in the report")
     args = ap.parse_args()
 
     resume = read_resume(args.resume).strip()
@@ -127,7 +149,9 @@ def main() -> None:
     (args.out / "results.json").write_text(
         json.dumps({"summary": summary, "results": results}, indent=1, ensure_ascii=False)
     )
-    (args.out / "report.html").write_text(render_html(summary, results, resume))
+    (args.out / "report.html").write_text(
+        render_html(summary, results, resume, photo=photo_data_uri(args.photo))
+    )
 
     print(f"\n{'#':>3}  {'company':<22} {'chance':>6} {'conf':>5}  {'mismatch':<10} hq")
     for r in results[: args.top]:

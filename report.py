@@ -42,9 +42,9 @@ def _candidate_name(resume: str) -> str:
     return "Candidate"
 
 
-def render_html(summary: dict, results: list[dict], resume: str) -> str:
+def render_html(summary: dict, results: list[dict], resume: str, photo: str | None = None) -> str:
     payload = json.dumps(
-        {"summary": summary, "results": results, "candidate": _candidate_name(resume),
+        {"summary": summary, "results": results, "candidate": _candidate_name(resume), "photo": photo,
          "ramp": RAMP, "labels": SIGNAL_LABELS, "mismatch_labels": MISMATCH_LABELS},
         ensure_ascii=False,
     ).replace("</", "<\\/")
@@ -60,6 +60,8 @@ TEMPLATE = r"""<!doctype html>
 *{box-sizing:border-box}
 body{margin:0;background:var(--surface);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif}
 header{display:flex;align-items:flex-end;justify-content:space-between;padding:22px 28px 14px;gap:24px;flex-wrap:wrap}
+.me{display:flex;align-items:center;gap:14px}
+.avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:var(--tile)}
 h1{font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
 h1 small{display:block;font-size:12px;color:var(--ink3);font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
 .stats{display:flex;gap:28px}
@@ -113,7 +115,7 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13px}
 </style></head>
 <body>
 <header>
-  <h1><small>Picking the best company using Jev</small><span id="cand"></span></h1>
+  <div class="me"><img class="avatar" id="avatar" alt="" hidden><h1><small>Picking the best company using Jev</small><span id="cand"></span></h1></div>
   <div class="stats" id="stats"></div>
 </header>
 <main>
@@ -146,6 +148,7 @@ const mix = (hex, a) => { // blend ramp colour over the neutral tile so low chan
 let sel = null;
 
 $("#cand").textContent = D.candidate;
+if (D.photo) { const a = $("#avatar"); a.src = D.photo; a.hidden = false; }
 $("#stats").innerHTML = [
   ["checked", `${S.checked}<span>/${S.total}</span>`],
   ["likely interview", S.likely_interview],

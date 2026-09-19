@@ -46,8 +46,10 @@ row per request passes. Ranking is the whole product here.
 
 `out/results.json` holds the summary and every company's raw signals.
 `out/report.html` is a self-contained page: the company grid tinted by
-chance, the signal meters for the selected company, the top five, and a
-full ranked table. Logos come from Google's favicon endpoint, so the page
+chance with a red ring on every company over 50%, the signal meters for
+the selected company, a sideways-scrolling shortlist of everything over
+the line, and a full ranked table. Pass `--photo headshot.jpg` to put a
+picture in the header; it is inlined, never copied into the repo. Logos come from Google's favicon endpoint, so the page
 needs network for logos only.
 
 ## A first run

@@ -1,0 +1,99 @@
+# jobbyjev
+
+Give it a resume and a list of companies. It ranks the companies by how
+likely the candidate is to get an interview, puts a confidence on each, and
+names the mismatch when there is one. A local reproduction of Backdoor's
+"picking the best company using Jev" demo, built on TypeSafe's Jev model.
+
+```
+python3 rank.py samples/sample_resume.md          # 400 companies, ~25 s, ~$0.03
+python3 rank.py my_resume.pdf --limit 50          # a quick look
+open out/report.html
+```
+
+Needs Python 3.12, `requests`, and a TypeSafe key in `TYPESAFE_API_KEY`
+(or `.env`, see `.env.example`). PDF resumes need `pdftotext` (poppler).
+
+## How it works
+
+One Jev request per company. The state is `{candidate: {resume}, company:
+{name, hq, stage, size, category, description, hiring_for, founder_led}}`
+and every request carries the same six judgments (`questions.py`):
+
+| id | type | judgment |
+|---|---|---|
+| `domain_fit` | Score 0..3 | does the candidate's past work match what the company builds |
+| `role_fit` | Score 0..3 | does their discipline match a role in `hiring_for` |
+| `stage_fit` | Score 0..3 | have they worked at employers of this stage and size |
+| `would_interview` | Noul | would a recruiter here reach out |
+| `location_ok` | Noul | is the stated location or preference compatible with the HQ |
+| `mismatch` | Choice | the single biggest disqualifier, with an explicit `none` |
+
+Code combines them (`questions.compose`): `fit` is a weighted mean of the
+three Scores, `chance` is half `would_interview` and half `fit`, scaled by
+`location_ok`. Confidence is the mean of the Score and Choice confidences.
+A mismatch is only reported when the Choice confidence clears 0.5. The
+weights and thresholds are constants at the top of `questions.py`; change
+them and re-run, the response cache makes that free.
+
+Why one request per company and not 40 companies per request: the
+[jev-orderby-bench](https://github.com/yodablocks/jev-orderby-bench)
+measurement found the same rows through a 40-rows-per-state layout fail the
+ranking gate (pairwise inversion 0.171 against a 0.15 threshold) while one
+row per request passes. Ranking is the whole product here.
+
+## Output
+
+`out/results.json` holds the summary and every company's raw signals.
+`out/report.html` is a self-contained page: the company grid tinted by
+chance, the signal meters for the selected company, the top five, and a
+full ranked table. Logos come from Google's favicon endpoint, so the page
+needs network for logos only.
+
+## A first run
+
+Sample resume (fictional payments backend engineer, Taipei) against all 400
+companies, `jev-1.13.0`, 16 workers:
+
+| checked | likely interview | mismatch flagged | avg chance | time | input tokens | cost |
+|---|---|---|---|---|---|---|
+| 400 | 88 | 90 | 0.55 | 22.7 s | 669k | $0.028 |
+
+Top of the list: Modern Treasury, Column, Unit, Melio, Increase, XREX,
+Mercury, Supabase. Bottom: the semiconductor companies, all flagged as a
+discipline mismatch. That is the order a person would give.
+
+## What it is not
+
+- **Generous on "would interview".** The median `would_interview`
+  probability across the 400 was 0.80, so half the companies come out as
+  plausible and 88 clear the 0.70 "likely" line. Backdoor's demo shows one
+  "would hire" out of 400. Either raise `LIKELY_THRESHOLD`, or add the
+  signal this build lacks: live openings. Without a posting to match
+  against, "would a recruiter reach out" is answered about the company in
+  general, and most companies hire backend engineers in general.
+
+- **Not calibrated on hiring outcomes.** The probabilities are Jev's, and
+  nobody has checked them against who actually got interviews. The same
+  bench above found Jev underconfident on easy labels and failing four of
+  six gates on a hard graded-relevance probe. Treat the order as a
+  shortlist generator, not a prediction.
+- **The company data is a snapshot.** `data/companies.json` is 400
+  well-known tech companies with a one-line description and typical roles,
+  written from general knowledge in September 2026. "Founder-led" and
+  `hiring_for` are approximate. It has no live job postings, so the demo's
+  "they're hiring now" signal has no equivalent here.
+- **English only, effectively.** Jev's accuracy on Chinese-language resumes
+  is documented as lower. Translate first.
+- **Resume text is sent to TypeSafe.** Read their data terms before using a
+  real resume.
+
+## Files
+
+- `rank.py` CLI and pipeline
+- `questions.py` the six judgments and the composite policy
+- `jev_client.py` HTTP client with retries and a SQLite response cache
+- `report.py` HTML renderer
+- `data/companies.json` the 400 companies
+- `samples/sample_resume.md` a fictional resume so it runs out of the box
+- `test_questions.py` offline tests, `python3 test_questions.py`

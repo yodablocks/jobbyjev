@@ -184,7 +184,8 @@ R.forEach(r => {
 
 const hotCount = R.filter(r => r.chance >= HOT).length;
 const shortN = Math.min(SHORT_MAX, Math.max(SHORT_MIN, hotCount));
-$("#shortmeta").textContent = hotCount ? `${hotCount} over ${pct(HOT)}%, scroll sideways` : `none over ${pct(HOT)}%, showing top ${shortN}`;
+$("#shortmeta").textContent = hotCount > shortN ? `${hotCount} over ${pct(HOT)}%, showing the top ${shortN}, scroll sideways`
+  : hotCount ? `${hotCount} over ${pct(HOT)}%, scroll sideways` : `none over ${pct(HOT)}%, showing the top ${shortN}`;
 $("#short").innerHTML = R.slice(0, shortN).map(r => `<div class="s${r.chance >= HOT ? " hot" : ""}" data-id="${r.id}" title="${r.name}" onclick="select('${r.id}')">${logo(r)}<b>${pct(r.chance)}%</b><span>${r.name}</span></div>`).join("");
 // wheel over the strip scrolls it sideways, so a trackpad or mouse wheel both work
 $("#short").addEventListener("wheel", e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }, {passive:false});

@@ -128,4 +128,23 @@ discipline mismatch. That is the order a person would give.
 - `samples/sample_resume.md` a fictional resume so it runs out of the box
 - `test_questions.py` offline tests, `python3 test_questions.py`
 
+## The rest of the series
+
+All mine, so none of them is independent corroboration of the others.
+
+- **[jev-orderby-bench](https://github.com/yodablocks/jev-orderby-bench)**
+  measures whether Jev's probabilities can be sorted on at all. It decided
+  this project's architecture: the same rows batched 40 to a request failed
+  its ranking gate at 0.171 inversion against a 0.15 threshold, where one row
+  per request passed. Ranking is the whole product here, so jobbyjev sends one
+  request per company and pays for it.
+- **[commitjev](https://github.com/yodablocks/commitjev)** reviews commits,
+  and ships labelled fixtures that say what it catches.
+- **[jevq](https://github.com/yodablocks/jevq)** checks Jev questions against
+  the model's documented failure modes without calling the API. Run it here
+  with `jevq --from questions:QUESTIONS`. The first time anyone did, it
+  produced three findings, and all three were wrong: it read "at least one
+  role" as a counting question when it is really an existence check. Fixing
+  that was worth more to jevq than the run was to this repo.
+
 MIT licensed.

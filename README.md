@@ -80,11 +80,17 @@ discipline mismatch. That is the order a person would give.
   bench above found Jev underconfident on easy labels and failing four of
   six gates on a hard graded-relevance probe. Treat the order as a
   shortlist generator, not a prediction.
-- **The company data is a snapshot.** `data/companies.json` is 400
-  well-known tech companies with a one-line description and typical roles,
-  written from general knowledge in September 2026. "Founder-led" and
-  `hiring_for` are approximate. It has no live job postings, so the demo's
-  "they're hiring now" signal has no equivalent here.
+- **Nothing in the company data was researched.** `data/companies.json` is
+  400 well-known tech companies written from a language model's general
+  knowledge on 2026-09-17. No entry was sourced or checked against any
+  company's own material. `stage`, `size`, `category`, `hiring_for` and
+  `founder_led` are impressions rather than facts, and some of them are
+  certainly wrong. Do not quote an entry as a fact about the company it
+  names, and do not read anything into which companies are present. The file
+  says all of this in its own `_provenance` record, because a JSON file gets
+  copied and loaded by things that never read a README. It also has no job
+  postings, so the demo's "they're hiring now" signal has no equivalent
+  here. Replace it with sourced data before any answer matters.
 - **English only, effectively.** Jev's accuracy on Chinese-language resumes
   is documented as lower. Translate first.
 - **Resume text is sent to TypeSafe.** Read their data terms before using a

@@ -30,6 +30,21 @@ DEFAULT_COMPANIES = HERE / "data" / "companies.json"
 CACHE = HERE / ".data" / "cache.sqlite"
 
 
+def load_companies(path: Path) -> list[dict]:
+    """Read the company file, which carries a provenance record alongside the data.
+
+    The provenance is in the file rather than only in the README because a JSON
+    file gets copied, forked and loaded by things that never read a README, and
+    what these entries are (general knowledge, unverified) travels with them or
+    it does not travel at all. A bare list is still accepted, since that is what
+    earlier versions of this file were.
+    """
+    data = json.loads(path.read_text())
+    if isinstance(data, list):
+        return data
+    return data["companies"]
+
+
 def read_resume(path: Path) -> str:
     if path.suffix.lower() == ".pdf":
         try:
@@ -96,7 +111,7 @@ def main() -> None:
     resume = read_resume(args.resume).strip()
     if not resume:
         sys.exit(f"{args.resume} is empty")
-    companies = json.loads(args.companies.read_text())
+    companies = load_companies(args.companies)
     if args.limit:
         companies = companies[: args.limit]
 

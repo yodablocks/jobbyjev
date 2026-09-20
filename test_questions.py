@@ -54,6 +54,32 @@ def test_state_only_carries_needed_company_fields():
     assert s["candidate"]["resume"] == "resume text"
 
 
+def test_company_file_carries_its_provenance():
+    """The file says what it is, so that survives being copied out of here."""
+    import json
+    from pathlib import Path
+    data = json.loads((Path(__file__).parent / "data" / "companies.json").read_text())
+    assert "_provenance" in data, "the dataset must say where it came from"
+    text = " ".join(str(v) for v in data["_provenance"].values()).lower()
+    for claim in ("not researched", "expect errors", "no job postings"):
+        assert claim.split()[0] in text, claim
+    assert len(data["companies"]) == 400
+
+
+def test_loader_accepts_both_file_shapes():
+    import json
+    import tempfile
+    from pathlib import Path
+    import rank
+    with tempfile.TemporaryDirectory() as tmp:
+        bare = Path(tmp) / "bare.json"
+        bare.write_text(json.dumps([{"name": "A"}]))
+        assert rank.load_companies(bare) == [{"name": "A"}]
+        wrapped = Path(tmp) / "wrapped.json"
+        wrapped.write_text(json.dumps({"_provenance": {}, "companies": [{"name": "B"}]}))
+        assert rank.load_companies(wrapped) == [{"name": "B"}]
+
+
 if __name__ == "__main__":
     import sys
     fns = [v for k, v in dict(globals()).items() if k.startswith("test_")]

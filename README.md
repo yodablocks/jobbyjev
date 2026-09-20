@@ -11,6 +11,28 @@ python3 rank.py my_resume.pdf --limit 50          # a quick look
 open out/report.html
 ```
 
+## Which way round it runs
+
+It ranks **companies**, for one candidate. You give it your own resume and it
+tells you where your applications are worth spending. That is the direction it
+was built for and the only one anyone has looked at it in.
+
+**Do not turn it around and screen candidates with it.** Run many resumes past
+one company and `would_interview` becomes a hiring filter, and it would be a
+bad one. Three reasons, all measured rather than asserted:
+
+- It is generous. The median `would_interview` across 400 companies was 0.80,
+  and 88 cleared the 0.70 "likely" line. The demo this reproduces found one
+  in 400. Something that says yes to a fifth of the world sorts nobody.
+- Nobody has checked a single one of these probabilities against who actually
+  got an interview. They are Jev's numbers about a resume and a company
+  description, not evidence about a person.
+- The companies it scores against are made up in the ways that matter. See
+  the data note below.
+
+A number nobody has validated, applied to somebody's job application, is worse
+than no number, because it looks like it knows something.
+
 Needs Python 3.12, `requests`, and a TypeSafe key in `TYPESAFE_API_KEY`
 (or `.env`, see `.env.example`). PDF resumes need `pdftotext` (poppler).
 

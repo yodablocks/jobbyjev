@@ -127,3 +127,5 @@ discipline mismatch. That is the order a person would give.
 - `data/companies.json` the 400 companies
 - `samples/sample_resume.md` a fictional resume so it runs out of the box
 - `test_questions.py` offline tests, `python3 test_questions.py`
+
+MIT licensed.

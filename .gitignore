@@ -5,3 +5,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# commitjev writes its response cache into whatever repo it checks.
+.commitjev/
